@@ -6,6 +6,16 @@ You add your video folders, and Iris turns them into a library you can browse, s
 up where you left off. It plays pretty much anything, including 4K, HDR and MKV files with a
 bunch of audio and subtitle tracks.
 
+![Iris Home, with Continue watching and Recently added](screenshots/home.png)
+
+![The Iris library, browsing by folder](screenshots/library.png)
+
+![Iris playing a video](screenshots/player.png)
+
+![Iris connected to a Jellyfin server](screenshots/server.png)
+
+<sub>Films shown: <a href="https://studio.blender.org/films/">Blender Studio open movies</a> (Charge, Coffee Run, Spring, Agent 327), CC BY, blender.org.</sub>
+
 ## Why another media player?
 
 I was using mpv for everything, with a bunch of random configs I picked up from here and there.
@@ -47,6 +57,13 @@ Runs on Windows 10 and 11, 64-bit.
 - Mini player that stays on top while you do other stuff.
 - Scroll over the video to change the volume.
 
+**Media servers**
+- Connect your **Jellyfin** server and browse it like a proper media center: films, shows,
+  details pages, and picking the version, audio and subtitles before you play.
+- Connect **Stash** too, with scenes, performers, studios, tags and markers.
+- Your progress syncs back to the server, and you can switch between servers in one click.
+- Plex is on the way.
+
 **Opening files**
 - Right-click a video in File Explorer and pick **Open with › Iris**, or just drag it onto Iris.
 - If you want it as your default player, set it in **Settings › Apps › Default apps**.
@@ -76,7 +93,7 @@ Runs on Windows 10 and 11, 64-bit.
 - Your library, collections and resume points are saved in `%LocalAppData%\Iris`.
 - You can uninstall it from **Settings › Apps › Installed apps**. Your library stays, in case you
   come back.
-- Next on my list is Jellyfin support, so you can stream from your server.
+- Next on my list: a preview picture when you hover the seek bar, and skip intro.
 
 It's still a work in progress, so things will keep changing as I go.
 
