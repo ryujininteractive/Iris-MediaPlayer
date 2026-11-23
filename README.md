@@ -6,13 +6,28 @@ You add your video folders, and Iris turns them into a library you can browse, s
 up where you left off. It plays pretty much anything, including 4K, HDR and MKV files with a
 bunch of audio and subtitle tracks.
 
-![Iris Home, with Continue watching and Recently added](screenshots/home.png)
-
-![The Iris library, browsing by folder](screenshots/library.png)
-
-![Iris playing a video](screenshots/player.png)
-
-![Iris connected to a Jellyfin server](screenshots/server.png)
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <a href="screenshots/home.png"><img src="screenshots/home.png" alt="Iris Home, with Continue watching and Recently added"></a><br>
+      <sub><b>Home</b>: pick up where you left off, and see what's new</sub>
+    </td>
+    <td width="50%" align="center">
+      <a href="screenshots/library.png"><img src="screenshots/library.png" alt="The Iris library, browsing by folder"></a><br>
+      <sub><b>Library</b>: your videos by video, folder or collection</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <a href="screenshots/player.png"><img src="screenshots/player.png" alt="Iris playing a video"></a><br>
+      <sub><b>Player</b>: mpv doing the playback, with clean controls on top</sub>
+    </td>
+    <td width="50%" align="center">
+      <a href="screenshots/server.png"><img src="screenshots/server.png" alt="Iris connected to a Jellyfin server"></a><br>
+      <sub><b>Jellyfin</b>: your server, browsed like a proper media center</sub>
+    </td>
+  </tr>
+</table>
 
 <sub>Films shown: <a href="https://studio.blender.org/films/">Blender Studio open movies</a> (Charge, Coffee Run, Spring, Agent 327), CC BY, blender.org.</sub>
 
