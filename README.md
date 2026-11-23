@@ -34,8 +34,6 @@ bunch of audio and subtitle tracks.
 ## Why another media player?
 
 I was using mpv for everything, with a bunch of random configs I picked up from here and there.
-It worked fine and the playback was great, I just never really knew what half of those settings did.
-
 I also tried a few Jellyfin clients for my library. Not the best experience, to be honest.
 
 So I thought, why not just make my own. Yes, yet another media player. This is my take on it:
@@ -43,7 +41,7 @@ mpv doing the playback, and a library and player on top that I actually enjoy us
 
 ## Download
 
-Grab the setup from [ryujininteractive.com](https://www.ryujininteractive.com/Iris-1/IrisMediaPlayer-win-Setup.exe)
+Grab the setup from [ryujininteractive](https://www.ryujininteractive.com/Iris-1/IrisMediaPlayer-win-Setup.exe)
 and run it. It installs in a few seconds and opens Iris. No admin rights, nothing else to install.
 
 Windows will probably show "Windows protected your PC" the first time. That's just because the
