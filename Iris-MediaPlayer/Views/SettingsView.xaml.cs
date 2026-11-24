@@ -131,10 +131,18 @@ public sealed partial class SettingsView : UserControl
                 value => PlayerSettings.WheelVolumeStep = value));
 
         BeginSection("Updates");
-        AddRow("Current version", null, ValueText(CurrentVersion));
-        AddRow("Check for updates now", "Looks at ryujininteractive.com and downloads a newer version if there is one.", UpdateControl());
-        AddRow("Update automatically", "Look for new versions after Iris starts, and download them quietly.",
-            Toggle(AppSettings.AutoUpdate, on => AppSettings.AutoUpdate = on));
+        AddRow("Current version", null, ValueText(VersionLabel));
+        if (Installation.IsPackaged)
+        {
+            AddRow("Updates", "The Microsoft Store keeps Iris up to date.", ButtonControl("Open the Store", false, async _ =>
+                await Launcher.LaunchUriAsync(new Uri("ms-windows-store://downloadsandupdates"))));
+        }
+        else
+        {
+            AddRow("Check for updates now", "Looks at ryujininteractive.com and downloads a newer version if there is one.", UpdateControl());
+            AddRow("Update automatically", "Look for new versions after Iris starts, and download them quietly.",
+                Toggle(AppSettings.AutoUpdate, on => AppSettings.AutoUpdate = on));
+        }
 
         BeginSection("Storage");
         AddRow("Where Iris keeps its data", AppStorage.DataFolder, ButtonControl("Open folder", false, async _ =>
@@ -145,9 +153,10 @@ public sealed partial class SettingsView : UserControl
             ButtonControl("Reset library…", false, async button => await ResetLibraryAsync(button)));
 
         BeginSection("About");
-        AddRow("Iris", $"Version {CurrentVersion} · by Ryujin Interactive", ButtonControl("Visit the website", false, async _ =>
+        AddRow("Iris", $"Version {VersionLabel} · by Ryujin Interactive", ButtonControl("Visit the website", false, async _ =>
             await Launcher.LaunchUriAsync(new Uri(SiteUrl))));
-        AddRow("Credits", "Playback by mpv, the open-source media player. Installer and updates by Velopack. "
+        AddRow("Credits", "Playback by mpv, the open-source media player."
+                          + (Installation.IsPackaged ? " " : " Installer and updates by Velopack. ")
                           + "Full licenses are in THIRD-PARTY-NOTICES.md next to Iris.", null);
 
         RebuildFolderList();
@@ -293,6 +302,9 @@ public sealed partial class SettingsView : UserControl
     }
 
     // ---------- Updates ----------
+
+    /// <summary>The version as shown in Settings, with "(MSIX)" on the Microsoft Store version so the two are easy to tell apart.</summary>
+    private static string VersionLabel => Installation.IsPackaged ? $"{CurrentVersion} (MSIX)" : CurrentVersion;
 
     private static string CurrentVersion
     {

@@ -28,12 +28,33 @@ internal static class Installation
         [".avi", ".flv", ".m2ts", ".m4v", ".mkv", ".mov", ".mp4", ".mpeg", ".mpg", ".mts", ".ogv", ".ts", ".webm", ".wmv"];
 
     /// <summary>
+    /// True when Iris runs from its MSIX package (the Microsoft Store version). The Store installs
+    /// and updates the package and its manifest registers the file types, so Velopack stays out of it.
+    /// </summary>
+    public static bool IsPackaged { get; } = DetectPackage();
+
+    private static bool DetectPackage()
+    {
+        uint length = 0;
+        // ERROR_INSUFFICIENT_BUFFER means there is a package name to read; APPMODEL_ERROR_NO_PACKAGE means none.
+        return GetCurrentPackageFullName(ref length, null) == ERROR_INSUFFICIENT_BUFFER;
+    }
+
+    private const int ERROR_INSUFFICIENT_BUFFER = 122;
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+    private static extern int GetCurrentPackageFullName(ref uint packageFullNameLength, char[]? packageFullName);
+
+    /// <summary>
     /// Call first thing in Main. During install, update or uninstall Velopack runs the matching
     /// hook below and exits the process; on a normal launch it returns straight away (and applies
-    /// an update that was downloaded earlier but not yet installed).
+    /// an update that was downloaded earlier but not yet installed). Does nothing in the Store version.
     /// </summary>
     public static void RunVelopackHooks()
     {
+        if (IsPackaged)
+            return;
+
         VelopackApp.Build()
             .OnAfterInstallFastCallback(_ => RegisterFileTypes())
             .OnAfterUpdateFastCallback(_ => RegisterFileTypes())

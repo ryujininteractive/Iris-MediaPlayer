@@ -1,28 +1,29 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 
 <Package
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
-  xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
   IgnorableNamespaces="uap rescap">
 
+  <!--
+    Identity must match the app reserved in Partner Center (Product identity page).
+    Version is set from <Version> in Iris-MediaPlayer.csproj by build-msix.ps1; the Store needs the last part to be 0.
+  -->
   <Identity
-    Name="bf315f38-a664-47e1-967d-769e61d05e48"
-    Publisher="CN=Ryujin Interactive"
-    Version="1.0.0.0" />
-
-  <mp:PhoneIdentity PhoneProductId="bf315f38-a664-47e1-967d-769e61d05e48" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+    Name="RyujinInteractive.Iris-VideoPlayer"
+    Publisher="CN=046CE845-4191-4F32-BA40-B213EEB5EA6F"
+    Version="1.3.1.0" />
 
   <Properties>
-    <DisplayName>Iris</DisplayName>
+    <!-- Must match the name reserved in Partner Center. The Start menu and the window still say "Iris". -->
+    <DisplayName>Iris - Video Player</DisplayName>
     <PublisherDisplayName>Ryujin Interactive</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 
   <Dependencies>
-    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26226.0" />
-    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26226.0" />
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26100.0" />
   </Dependencies>
 
   <Resources>
@@ -35,7 +36,7 @@
       EntryPoint="$targetentrypoint$">
       <uap:VisualElements
         DisplayName="Iris"
-        Description="A native media player for Windows"
+        Description="A video player for your library and your Jellyfin and Stash servers"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png">

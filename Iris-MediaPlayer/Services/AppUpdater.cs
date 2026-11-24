@@ -25,13 +25,15 @@ internal enum UpdateCheckResult
 /// </summary>
 internal sealed class AppUpdater
 {
-    private readonly UpdateManager _manager = new(new SimpleWebSource(Installation.UpdatesUrl));
+    // Not created at all in the Store version, where Velopack never runs.
+    private readonly UpdateManager? _manager = Installation.IsPackaged ? null : new(new SimpleWebSource(Installation.UpdatesUrl));
     private UpdateInfo? _ready;
 
     /// <summary>The version that is downloaded and waiting, or null.</summary>
     public string? ReadyVersion => _ready?.TargetFullRelease.Version.ToString();
 
-    public bool IsInstalled => _manager.IsInstalled;
+    /// <summary>Installed by the setup (.exe). The Store version is updated by the Store instead.</summary>
+    public bool IsInstalled => _manager?.IsInstalled == true;
 
     /// <summary>
     /// The Settings page's "Check for updates now": like <see cref="DownloadUpdateAsync"/> but says why
@@ -39,18 +41,18 @@ internal sealed class AppUpdater
     /// </summary>
     public async Task<UpdateCheckResult> CheckNowAsync()
     {
-        if (!_manager.IsInstalled)
+        if (!IsInstalled)
             return UpdateCheckResult.NotInstalled;
         if (_ready is not null)
             return UpdateCheckResult.Ready;
 
         try
         {
-            var update = await _manager.CheckForUpdatesAsync();
+            var update = await _manager!.CheckForUpdatesAsync();
             if (update is null)
                 return UpdateCheckResult.UpToDate;
 
-            await _manager.DownloadUpdatesAsync(update);
+            await _manager!.DownloadUpdatesAsync(update);
             _ready = update;
             return UpdateCheckResult.Ready;
         }
@@ -63,16 +65,16 @@ internal sealed class AppUpdater
     /// <summary>Checks the website and downloads a newer release. Returns true when one is ready to install.</summary>
     public async Task<bool> DownloadUpdateAsync()
     {
-        if (!_manager.IsInstalled)
+        if (!IsInstalled)
             return false;
 
         try
         {
-            var update = await _manager.CheckForUpdatesAsync();
+            var update = await _manager!.CheckForUpdatesAsync();
             if (update is null)
                 return false;
 
-            await _manager.DownloadUpdatesAsync(update);
+            await _manager!.DownloadUpdatesAsync(update);
             _ready = update;
             return true;
         }
@@ -86,7 +88,7 @@ internal sealed class AppUpdater
     /// <summary>Closes Iris, installs the downloaded version and starts it again.</summary>
     public void RestartToUpdate()
     {
-        if (_ready is not null)
+        if (_ready is not null && _manager is not null)
             _manager.ApplyUpdatesAndRestart(_ready.TargetFullRelease);
     }
 }

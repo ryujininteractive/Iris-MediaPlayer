@@ -5,6 +5,9 @@
 #   is published by hand.
 # - "Run workflow" on the Actions tab: builds and keeps the files as a downloadable artifact only.
 #
+# It also builds the Microsoft Store package (build-msix.ps1) and keeps the .msixupload as the
+# "iris-<version>-store" artifact, to submit in Partner Center. The Store signs it.
+#
 # This workflow holds no keys. The release is uploaded to the update server from the maintainer's
 # PC with `build-installer.cmd -FromGitHub <tag>`.
 name: Release
@@ -58,6 +61,18 @@ jobs:
       # Code signing (SignPath) goes here once the project is approved: sign the app before packing
       # and the setup after it.
 
+      - name: Build the Microsoft Store package
+        shell: pwsh
+        run: ./build-msix.ps1
+
+      - name: Keep the Store package
+        uses: actions/upload-artifact@v4
+        with:
+          name: iris-${{ steps.version.outputs.version }}-store
+          path: artifacts/msix/*.msixupload
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Collect this version's files
         shell: pwsh
         run: |
@@ -86,4 +101,4 @@ jobs:
           $files = Get-ChildItem out -File | ForEach-Object FullName
           gh release create $env:GITHUB_REF_NAME $files --draft --verify-tag `
             --title "Iris ${{ steps.version.outputs.version }}" `
-            --notes "Iris ${{ steps.version.outputs.version }} for Windows (x64). Download IrisMediaPlayer-win-Setup.exe to install, or the portable zip."
+            --notes "Iris ${{ steps.version.outputs.version }} for Windows (x64). Download IrisMediaPlayer-win-Setup.exe to install, or the portable zip. Prefer a signed version? Get Iris from the Microsoft Store: https://apps.microsoft.com/detail/9PBKP3C8TB98"

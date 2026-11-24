@@ -7,9 +7,9 @@ using System.Text.Json;
 namespace Iris_MediaPlayer.Services;
 
 /// <summary>
-/// Where Iris keeps its data: %LocalAppData%\Iris. Iris is a normal desktop app (no MSIX package),
-/// so it can't use Windows' package storage (ApplicationData); small settings go in settings.json
-/// here and larger lists (collections, resume points) in their own JSON files next to it.
+/// Where Iris keeps its data: %LocalAppData%\Iris for the setup (.exe) version, or the package's
+/// LocalState folder for the Microsoft Store version. Small settings go in settings.json and larger
+/// lists (collections, resume points) in their own JSON files next to it.
 ///
 /// The library window and a standalone player window can run at the same time as separate
 /// processes, so settings are re-read whenever the file changed on disk and written atomically.
@@ -32,9 +32,17 @@ internal static class AppStorage
 
     private static string SettingsPath => GetFilePath(SettingsFileName);
 
+    /// <summary>The setup (.exe) version's data folder, %LocalAppData%\Iris.</summary>
+    private static string DesktopDataFolder
+        => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Iris");
+
     private static string CreateDataFolder()
     {
-        var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Iris");
+        // The Store version keeps its data in its package folder. Windows would quietly redirect
+        // writes to %LocalAppData% there anyway; using it directly keeps "Open folder" honest.
+        var folder = Installation.IsPackaged
+            ? Windows.Storage.ApplicationData.Current.LocalFolder.Path
+            : DesktopDataFolder;
         Directory.CreateDirectory(folder);
         return folder;
     }
@@ -121,6 +129,12 @@ internal static class AppStorage
         if (File.Exists(SettingsPath))
             return;
 
+        if (Installation.IsPackaged)
+        {
+            CopyFromDesktopVersion();
+            return;
+        }
+
         var packageFolder = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Packages", MsixPackageFamilyName);
 
@@ -166,5 +180,26 @@ internal static class AppStorage
             _settings = migrated;
             Save();
         }
+    }
+
+    /// <summary>
+    /// First run of the Store version on a PC that already had the setup (.exe) version: copy its
+    /// settings, library folders, collections and resume points, so switching loses nothing.
+    /// The two versions keep separate copies from then on.
+    /// </summary>
+    private static void CopyFromDesktopVersion()
+    {
+        foreach (var fileName in (string[])[SettingsFileName, .. MigratedFiles])
+        {
+            var source = Path.Combine(DesktopDataFolder, fileName);
+            var target = GetFilePath(fileName);
+            try
+            {
+                if (File.Exists(source) && !File.Exists(target))
+                    File.Copy(source, target);
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { }
+        }
+        // No reload needed: Reload() notices settings.json's new timestamp on the next read.
     }
 }

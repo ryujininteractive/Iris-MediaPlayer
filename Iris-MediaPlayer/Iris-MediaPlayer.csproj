@@ -32,14 +32,19 @@
   </PropertyGroup>
 
   <!--
-    Iris ships as a normal desktop app installed by an MSI (see Iris.Installer), not as an MSIX
-    package. It carries its own .NET and Windows App SDK runtimes, so a fresh PC needs nothing
-    else installed. Build with -p:IrisMsix=true to make the old MSIX package instead.
+    Iris ships two ways, from the same code:
+    - The setup (.exe) from the website: a normal desktop app installed and updated by Velopack.
+    - The Microsoft Store: an MSIX package, built with -p:IrisMsix=true (see build-msix.ps1).
+      The Store signs, installs and updates it; Package.appxmanifest registers the video file types.
+    Both carry their own .NET and Windows App SDK runtimes, so a fresh PC needs nothing else.
+    At run time Installation.IsPackaged tells them apart.
   -->
-  <PropertyGroup Condition="'$(IrisMsix)' != 'true'">
-    <WindowsPackageType>None</WindowsPackageType>
+  <PropertyGroup>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
     <SelfContained>true</SelfContained>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(IrisMsix)' != 'true'">
+    <WindowsPackageType>None</WindowsPackageType>
   </PropertyGroup>
 
   <ItemGroup>
@@ -52,6 +57,9 @@
     <!-- The SDK adds image files on its own too, so remove the source explicitly. -->
     <Content Remove="Assets\AppIcon.png" />
     <None Include="Assets\AppIcon.png" />
+    <!-- Iris's licence and the libraries' licences travel with the app (GPL, and Settings › Credits). -->
+    <Content Include="..\LICENSE" Link="LICENSE.txt" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
@@ -91,7 +99,7 @@
   <PropertyGroup>
     <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
     <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
-    <PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
-    <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
+    <!-- Never trimmed: trimming removes types WinUI only reaches at run time and the app crashes on start. -->
+    <PublishTrimmed>False</PublishTrimmed>
   </PropertyGroup>
 </Project>
