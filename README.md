@@ -107,7 +107,8 @@ In the order I'm planning to build them:
 1. **Seek bar preview:** a little picture of that moment when you hover the seek bar.
 2. **Skip intro and skip silence:** a button to jump past the intro, and an option to speed
    through the quiet bits.
-3. **Plex:** connect your Plex server, like Jellyfin and Stash.
+3. **More themes:** more looks to choose from, beyond the current dark one.
+4. **Plex:** connect your Plex server, like Jellyfin and Stash.
 
 It's still a work in progress, so things will keep changing as I go.
 
