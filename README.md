@@ -6,30 +6,21 @@ You add your video folders, and Iris turns them into a library you can browse, s
 up where you left off. It plays pretty much anything, including 4K, HDR and MKV files with a
 bunch of audio and subtitle tracks.
 
+<p align="center">
+  <a href="screenshots/home.png"><img src="screenshots/home.png" alt="Iris Home: your library, beautifully organized"></a>
+</p>
 <table>
   <tr>
     <td width="50%" align="center">
-      <a href="screenshots/home.png"><img src="screenshots/home.png" alt="Iris Home, with Continue watching and Recently added"></a><br>
-      <sub><b>Home</b>: pick up where you left off, and see what's new</sub>
+      <a href="screenshots/player.png"><img src="screenshots/player.png" alt="The Iris player: plays almost anything"></a>
     </td>
     <td width="50%" align="center">
-      <a href="screenshots/library.png"><img src="screenshots/library.png" alt="The Iris library, browsing by folder"></a><br>
-      <sub><b>Library</b>: your videos by video, folder or collection</sub>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" align="center">
-      <a href="screenshots/player.png"><img src="screenshots/player.png" alt="Iris playing a video"></a><br>
-      <sub><b>Player</b>: mpv doing the playback, with clean controls on top</sub>
-    </td>
-    <td width="50%" align="center">
-      <a href="screenshots/server.png"><img src="screenshots/server.png" alt="Iris connected to a Jellyfin server"></a><br>
-      <sub><b>Jellyfin</b>: your server, browsed like a proper media center</sub>
+      <a href="screenshots/server.png"><img src="screenshots/server.png" alt="Iris connected to a Jellyfin server, like a media center"></a>
     </td>
   </tr>
 </table>
 
-<sub>Films shown: <a href="https://studio.blender.org/films/">Blender Studio open movies</a> (Charge, Coffee Run, Spring, Agent 327), CC BY, blender.org.</sub>
+<sub>Films shown: <a href="https://studio.blender.org/films/">Blender Studio open movies</a>, CC BY, blender.org.</sub>
 
 ## Why another media player?
 
@@ -51,6 +42,9 @@ Iris updates itself. When I put out a new version, it downloads it in the backgr
 you to restart (or just installs it the next time you open it).
 
 Runs on Windows 10 and 11, 64-bit.
+
+Iris is soon to be on the **Microsoft Store** too, signed by Microsoft and updated by the Store. I'll
+put the link here once it's live.
 
 ## What it does right now
 
@@ -106,7 +100,14 @@ Runs on Windows 10 and 11, 64-bit.
 - Your library, collections and resume points are saved in `%LocalAppData%\Iris`.
 - You can uninstall it from **Settings › Apps › Installed apps**. Your library stays, in case you
   come back.
-- Next on my list: a preview picture when you hover the seek bar, and skip intro.
+## What's coming next
+
+In the order I'm planning to build them:
+
+1. **Seek bar preview:** a little picture of that moment when you hover the seek bar.
+2. **Skip intro and skip silence:** a button to jump past the intro, and an option to speed
+   through the quiet bits.
+3. **Plex:** connect your Plex server, like Jellyfin and Stash.
 
 It's still a work in progress, so things will keep changing as I go.
 
