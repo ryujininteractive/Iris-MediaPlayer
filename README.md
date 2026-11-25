@@ -32,19 +32,20 @@ mpv doing the playback, and a library and player on top that I actually enjoy us
 
 ## Download
 
-Grab the setup from [ryujininteractive](https://www.ryujininteractive.com/Iris-1/IrisMediaPlayer-win-Setup.exe)
+Runs on Windows 10 and 11, 64-bit. Two ways to get it, same app either way:
+
+**Microsoft Store:** signed by Microsoft, so no warnings, and the Store keeps it updated.
+
+<a href="https://apps.microsoft.com/detail/9PBKP3C8TB98"><img src="https://get.microsoft.com/images/en-us%20dark.svg" width="200" alt="Get it from Microsoft"></a>
+
+**Setup:** grab it from [ryujininteractive](https://www.ryujininteractive.com/Iris-1/IrisMediaPlayer-win-Setup.exe)
 and run it. It installs in a few seconds and opens Iris. No admin rights, nothing else to install.
 
 Windows will probably show "Windows protected your PC" the first time. That's just because the
-app isn't code-signed yet. Click **More info**, then **Run anyway**.
+setup isn't code-signed yet. Click **More info**, then **Run anyway**.
 
-Iris updates itself. When I put out a new version, it downloads it in the background and asks
-you to restart (or just installs it the next time you open it).
-
-Runs on Windows 10 and 11, 64-bit.
-
-Iris is soon to be on the **Microsoft Store** too, signed by Microsoft and updated by the Store. I'll
-put the link here once it's live.
+The setup version updates itself. When I put out a new version, it downloads it in the background
+and asks you to restart (or just installs it the next time you open it).
 
 ## What it does right now
 
