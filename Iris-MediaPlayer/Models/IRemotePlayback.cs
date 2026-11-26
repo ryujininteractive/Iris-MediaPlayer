@@ -10,4 +10,8 @@ public interface IRemotePlayback
     void ReportStarted(double positionSeconds, bool isPaused);
     void ReportProgress(double positionSeconds, bool isPaused);
     void ReportStopped(double positionSeconds);
+
+    /// <summary>Intros, recaps and credits the server knows about for this video; empty when it knows none.</summary>
+    System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<SkipSegment>> GetSkipSegmentsAsync()
+        => System.Threading.Tasks.Task.FromResult<System.Collections.Generic.IReadOnlyList<SkipSegment>>([]);
 }

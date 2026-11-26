@@ -44,6 +44,20 @@ internal static class PlayerSettings
         set => AppStorage.SetDouble("PlayerSeekPreviewWidth", Math.Clamp(value, 160, 480));
     }
 
+    /// <summary>What happens at an intro, recap or credits the player knows about.</summary>
+    public static SkipMode SkipIntro
+    {
+        get => Enum.TryParse<SkipMode>(AppStorage.GetString("PlayerSkipIntro"), out var mode) ? mode : SkipMode.Button;
+        set => AppStorage.SetString("PlayerSkipIntro", value.ToString());
+    }
+
+    /// <summary>Hurry through quiet parts (no sound for a moment) at high speed.</summary>
+    public static bool SkipSilence
+    {
+        get => AppStorage.GetBool("PlayerSkipSilence") ?? false;
+        set => AppStorage.SetBool("PlayerSkipSilence", value);
+    }
+
     public static int AutoplayCountdownSeconds
     {
         get => Math.Clamp((int)(AppStorage.GetDouble("PlayerAutoplayCountdown") ?? 5), 1, 30);

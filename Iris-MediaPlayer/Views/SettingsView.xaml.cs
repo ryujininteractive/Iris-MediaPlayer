@@ -96,6 +96,11 @@ public sealed partial class SettingsView : UserControl
         AddRow("Seek bar preview size", "How big the picture is.",
             Choice([("Small", 192), ("Medium", 288), ("Large", 384)], PlayerSettings.SeekPreviewWidth,
                 value => PlayerSettings.SeekPreviewWidth = value));
+        AddRow("Skip intro", "For intros, recaps and credits marked by Jellyfin or named in the file's chapters.",
+            Choice([("Show a button", SkipMode.Button), ("Skip automatically", SkipMode.Automatic), ("Off", SkipMode.Off)],
+                PlayerSettings.SkipIntro, value => PlayerSettings.SkipIntro = value));
+        AddRow("Skip silence", "Hurry through quiet moments with no sound. Also in the player's settings.",
+            Toggle(PlayerSettings.SkipSilence, on => PlayerSettings.SkipSilence = on));
         AddRow("Autoplay countdown", "Seconds before the next video starts.",
             Choice([("3 seconds", 3), ("5 seconds", 5), ("10 seconds", 10)], PlayerSettings.AutoplayCountdownSeconds,
                 value => PlayerSettings.AutoplayCountdownSeconds = value));

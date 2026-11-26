@@ -103,6 +103,10 @@ internal sealed class MpvPlayback : IDisposable
             Observe("eof-reached", FlagFormat);
             // Where the video sits in the window; changes on resize, zoom and new videos.
             Observe("osd-dimensions", (int)MpvPropertyFormat.String);
+            // Silence reports from the skip-silence filter (see SetSilenceDetection), and seeks, which
+            // end any silence being hurried through.
+            Observe($"af-metadata/{SilenceFilterLabel}", (int)MpvPropertyFormat.String);
+            Observe("seeking", FlagFormat);
 
             _eventThread = new Thread(EventLoop)
             {
@@ -322,6 +326,23 @@ internal sealed class MpvPlayback : IDisposable
     }
 
     public void SetSpeed(double speed) => SetDouble("speed", speed, "set playback speed");
+
+    public const string SilenceFilterLabel = "iris-silence";
+
+    /// <summary>
+    /// Turns FFmpeg's silence detector on or off in the audio chain. While on, mpv reports
+    /// "lavfi.silence_start" once the sound has stayed below -35 dB for half a second and
+    /// "lavfi.silence_end" when it comes back, through the af-metadata/iris-silence property.
+    /// </summary>
+    public void SetSilenceDetection(bool on)
+    {
+        var filters = on ? $"@{SilenceFilterLabel}:lavfi=[silencedetect=noise=-35dB:duration=0.5]" : string.Empty;
+        lock (_gate)
+        {
+            ThrowIfDisposed();
+            ThrowIfError(MpvNative.mpv_set_property_string(_handle, "af", filters), "set skip silence");
+        }
+    }
 
     /// <summary>Subtitle text size as a multiple of mpv's default (1 = normal).</summary>
     public void SetSubtitleScale(double scale) => SetDouble("sub-scale", Math.Clamp(scale, 0.3, 4), "set subtitle size");

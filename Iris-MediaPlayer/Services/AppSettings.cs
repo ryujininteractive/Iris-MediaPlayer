@@ -13,6 +13,17 @@ internal enum ResumeMode
     Never
 }
 
+/// <summary>What the player does at an intro, recap or end credits.</summary>
+internal enum SkipMode
+{
+    /// <summary>Show a "Skip intro" button while it plays.</summary>
+    Button,
+    /// <summary>Jump past it without asking.</summary>
+    Automatic,
+    /// <summary>Play it like the rest of the video.</summary>
+    Off
+}
+
 /// <summary>
 /// App-wide preferences that aren't about the player itself (library and Home). Like
 /// <see cref="PlayerSettings"/> they live in settings.json through <see cref="AppStorage"/>.

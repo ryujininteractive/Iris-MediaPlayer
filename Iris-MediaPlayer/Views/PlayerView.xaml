@@ -146,6 +146,16 @@
                 </StackPanel>
             </Border>
 
+            <!-- Skip intro / recap / credits, while one plays -->
+            <Button x:Name="SkipSegmentButton" Visibility="Collapsed" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                    Style="{StaticResource IrisCtaPrimaryButtonStyle}" Click="SkipSegment_Click"
+                    ToolTipService.ToolTip="S" AutomationProperties.Name="Skip">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock x:Name="SkipSegmentText" Text="Skip intro" />
+                    <FontIcon Glyph="&#xE893;" FontSize="12" />
+                </StackPanel>
+            </Button>
+
             <Border x:Name="UpNextCard" Visibility="Collapsed" HorizontalAlignment="Right" VerticalAlignment="Bottom"
                     Width="360" Padding="14" CornerRadius="18" Background="{StaticResource IrisGlassBrush}"
                     BorderBrush="#14FFFFFF" BorderThickness="1">
@@ -382,6 +392,16 @@
                             <TextBlock Text="SPEED" Style="{StaticResource IrisLabelTextStyle}" />
                             <controls:Segmented x:Name="SpeedSegments" IsPill="False" SelectionChanged="SpeedSegments_SelectionChanged" />
                         </StackPanel>
+
+                        <Grid ColumnSpacing="12">
+                            <StackPanel Spacing="2" VerticalAlignment="Center">
+                                <TextBlock Text="SKIP SILENCE" Style="{StaticResource IrisLabelTextStyle}" />
+                                <TextBlock Text="Hurry through moments with no sound" Style="{StaticResource IrisCaptionTextStyle}"
+                                           Foreground="{StaticResource IrisTextSecondaryBrush}" />
+                            </StackPanel>
+                            <ToggleSwitch x:Name="SkipSilenceToggle" HorizontalAlignment="Right" OnContent="" OffContent=""
+                                          MinWidth="0" Toggled="SkipSilenceToggle_Toggled" AutomationProperties.Name="Skip silence" />
+                        </Grid>
 
                         <StackPanel x:Name="ChaptersSection" Spacing="4" Visibility="Collapsed">
                             <TextBlock Text="CHAPTERS" Style="{StaticResource IrisLabelTextStyle}" Margin="0,0,0,4" />

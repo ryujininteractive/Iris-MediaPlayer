@@ -16,7 +16,6 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using Windows.Storage.Pickers;
 using Windows.UI.Core;
 using VirtualKey = Windows.System.VirtualKey;
 
@@ -65,6 +64,20 @@ public sealed partial class PlayerView : UserControl
     private SeekPreviewer? _seekPreviewer;
     private double _seekPreviewX;
     private int _seekPreviewWidth;
+
+    // Skip intro: parts to offer skipping, from the server or chapter names
+    private IReadOnlyList<SkipSegment> _serverSkipSegments = [];
+    private IReadOnlyList<SkipSegment> _skipSegments = [];
+    private readonly HashSet<SkipSegment> _autoSkipped = [];
+    private SkipSegment? _offeredSkip;
+    private int _skipSegmentsVersion;
+
+    // Skip silence: mpv reports quiet parts and the player plays them fast
+    private const double SilenceSpeed = 4;
+    private bool _isSkipSilenceOn;
+    private bool _isHurryingSilence;
+    private double _silenceEndsAt = -1;
+    private double _normalSpeed = 1;
 
     // Queue and current file
     private IReadOnlyList<MediaItem> _queue = [];
@@ -541,6 +554,10 @@ public sealed partial class PlayerView : UserControl
         TryMpv(mpv =>
         {
             mpv.SetSpeed(PlayerSettings.DefaultSpeed);
+            _normalSpeed = PlayerSettings.DefaultSpeed;
+            _isHurryingSilence = false;
+            _silenceEndsAt = -1;
+            SetSkipSilence(PlayerSettings.SkipSilence);
             mpv.SetSubtitleScale(PlayerSettings.SubtitleScale * SubtitleBaseScale);
             mpv.SetPreferredLanguages(
                 PlayerSettings.SubtitleLanguage == PlayerSettings.SubtitlesOff ? string.Empty : PlayerSettings.SubtitleLanguage,
@@ -583,11 +600,22 @@ public sealed partial class PlayerView : UserControl
                 _positionSeconds = position;
                 UpdateTimes();
                 SaveProgressIfDue();
+                if (_isHurryingSilence && _silenceEndsAt >= 0 && position >= _silenceEndsAt)
+                    EndSilenceHurry();
+                UpdateSkipSegment();
                 break;
             case "duration" when value is double duration:
                 _durationSeconds = Math.Max(0, duration);
                 UpdateTimes();
                 UpdateChapterMarks();
+                RefreshSkipSegments();
+                break;
+            case $"af-metadata/{MpvPlayback.SilenceFilterLabel}" when value is string report:
+                OnSilenceReport(report);
+                break;
+            case "seeking" when value is true:
+                // Silence is measured from where playback is; after a jump it starts over.
+                EndSilenceHurry();
                 break;
             case "chapter" when value is long chapter:
                 _currentChapter = (int)chapter;
@@ -639,7 +667,12 @@ public sealed partial class PlayerView : UserControl
                 MuteIcon.Glyph = muted ? MutedGlyph : VolumeGlyph;
                 break;
             case "speed" when value is double speed:
-                UpdatePlaybackSpeedSelection(speed);
+                // Skip silence's own speed-up isn't the viewer's speed choice.
+                if (Math.Abs(speed - SilenceSpeed) > 0.001)
+                {
+                    _normalSpeed = speed;
+                    UpdatePlaybackSpeedSelection(speed);
+                }
                 break;
             case "playback-error" when value is int error:
                 ShowStatusMessage($"mpv could not play this file (error {error}).");
@@ -668,6 +701,7 @@ public sealed partial class PlayerView : UserControl
         }
         RefreshTrackOptions();
         LoadChapters();
+        LoadServerSkipSegments();
         UpdateQueueControls();
         _posterTimer.Stop();
         _posterTimer.Start();
@@ -840,6 +874,7 @@ public sealed partial class PlayerView : UserControl
         UpNextImage.Source = media.Thumbnail;
         UpNextRing.Visibility = countdown ? Visibility.Visible : Visibility.Collapsed;
         UpNextCard.Visibility = Visibility.Visible;
+        HideSkipSegmentButton();
         if (!wasVisible)
             Motion.EnterFromBelow(UpNextCard, TimeSpan.Zero, 16);
 
@@ -1254,6 +1289,11 @@ public sealed partial class PlayerView : UserControl
         _lastSubtitleId = -1;
         _chapters = [];
         _currentChapter = -1;
+        _skipSegmentsVersion++;
+        _serverSkipSegments = [];
+        _skipSegments = [];
+        _autoSkipped.Clear();
+        HideSkipSegmentButton();
         UpdateDelayTexts();
         BuildTrackRows();
         BuildChapterRows();
@@ -1308,8 +1348,13 @@ public sealed partial class PlayerView : UserControl
         if (index >= 0 && index < Speeds.Length)
         {
             var speed = Speeds[index];
-            TryMpv(mpv => mpv.SetSpeed(speed));
-            UpdateSpeedLabel(speed);
+            _normalSpeed = speed;
+            // While skip silence hurries, the new speed starts when the sound comes back.
+            if (!_isHurryingSilence)
+            {
+                TryMpv(mpv => mpv.SetSpeed(speed));
+                UpdateSpeedLabel(speed);
+            }
         }
     }
 
@@ -1324,6 +1369,12 @@ public sealed partial class PlayerView : UserControl
     /// <summary>The bar shows the speed only when it isn't normal.</summary>
     private void UpdateSpeedLabel(double speed)
     {
+        if (_isHurryingSilence)
+        {
+            SpeedLabel.Text = "Skipping silence";
+            SpeedLabel.Visibility = Visibility.Visible;
+            return;
+        }
         var isNormal = Math.Abs(speed - 1) < 0.001;
         SpeedLabel.Text = $"{speed.ToString("0.##", CultureInfo.CurrentCulture)}×";
         SpeedLabel.Visibility = isNormal ? Visibility.Collapsed : Visibility.Visible;
@@ -1391,20 +1442,23 @@ public sealed partial class PlayerView : UserControl
             PlayerSettings.AutoplayNext = AutoplayToggle.IsOn;
     }
 
-    private async void LoadSubtitle_Click(object sender, RoutedEventArgs e)
+    private void LoadSubtitle_Click(object sender, RoutedEventArgs e)
     {
         if (XamlRoot?.ContentIslandEnvironment is not { } environment)
             return;
 
-        var picker = new FileOpenPicker { SuggestedStartLocation = PickerLocationId.VideosLibrary };
-        foreach (var extension in MediaLibraryService.SupportedSubtitleExtensions)
-            picker.FileTypeFilter.Add(extension);
-        var windowHandle = Microsoft.UI.Win32Interop.GetWindowFromWindowId(environment.AppWindowId);
-        WinRT.Interop.InitializeWithWindow.Initialize(picker, windowHandle);
-
-        var file = await picker.PickSingleFileAsync();
-        if (file is not null)
-            AddSubtitle(file.Path);
+        string? path = null;
+        try
+        {
+            path = FileDialogs.PickFile(Microsoft.UI.Win32Interop.GetWindowFromWindowId(environment.AppWindowId), "Subtitles",
+                MediaLibraryService.SupportedSubtitleExtensions);
+        }
+        catch (COMException)
+        {
+            ShowOsd("Windows couldn’t open the file chooser. Try dropping the subtitle onto the player.");
+        }
+        if (path is not null)
+            AddSubtitle(path);
         Focus(FocusState.Programmatic);
     }
 
@@ -1573,6 +1627,188 @@ public sealed partial class PlayerView : UserControl
         BuildChapterRows();
         UpdateChapterMarks();
         UpdateDetails();
+        RefreshSkipSegments();
+    }
+
+    // ---------- Skip intro ----------
+
+    /// <summary>Asks the media server (Jellyfin) for the intros and credits it has marked.</summary>
+    private async void LoadServerSkipSegments()
+    {
+        if (_currentMedia?.Remote is not { } remote)
+            return;
+
+        var version = _skipSegmentsVersion;
+        IReadOnlyList<SkipSegment> segments;
+        try
+        {
+            segments = await remote.GetSkipSegmentsAsync();
+        }
+        catch (Exception)
+        {
+            return;
+        }
+        if (version != _skipSegmentsVersion)
+            return;
+        _serverSkipSegments = segments;
+        RefreshSkipSegments();
+    }
+
+    /// <summary>
+    /// The server's segments when it has any (they're measured from the audio and video), otherwise the
+    /// ones found from chapter names.
+    /// </summary>
+    private void RefreshSkipSegments()
+    {
+        _skipSegments = _serverSkipSegments.Count > 0
+            ? _serverSkipSegments
+            : _durationSeconds > 0
+                ? SkipSegment.FromChapters(_chapters.Select(chapter => (chapter.Time, chapter.Title)).ToList(), _durationSeconds)
+                : [];
+        UpdateSkipSegment();
+    }
+
+    /// <summary>Shows the Skip button inside an intro, or skips it straight away when set to automatic.</summary>
+    private void UpdateSkipSegment()
+    {
+        var mode = PlayerSettings.SkipIntro;
+        var current = mode == SkipMode.Off || !CanSeek || _isAtEnd
+            ? null
+            // The last second isn't worth a button.
+            : _skipSegments.FirstOrDefault(segment => _positionSeconds >= segment.Start && _positionSeconds < segment.End - 1);
+
+        if (current is not null && mode == SkipMode.Automatic)
+        {
+            HideSkipSegmentButton();
+            // Once per part: going back into it means it's wanted.
+            if (!_isDraggingSeek && _autoSkipped.Add(current))
+            {
+                SkipPast(current);
+                ShowOsd(current.SkippedText);
+            }
+            return;
+        }
+
+        if (current is null || UpNextCard.Visibility == Visibility.Visible)
+        {
+            HideSkipSegmentButton();
+            return;
+        }
+        if (current == _offeredSkip)
+            return;
+
+        _offeredSkip = current;
+        SkipSegmentText.Text = current.ButtonText;
+        if (SkipSegmentButton.Visibility != Visibility.Visible)
+        {
+            SkipSegmentButton.Opacity = 0;
+            SkipSegmentButton.Visibility = Visibility.Visible;
+            Motion.Fade(SkipSegmentButton, 1, Motion.Slow);
+        }
+    }
+
+    private void HideSkipSegmentButton()
+    {
+        _offeredSkip = null;
+        SkipSegmentButton.Visibility = Visibility.Collapsed;
+    }
+
+    private void SkipSegment_Click(object sender, RoutedEventArgs e)
+    {
+        if (_offeredSkip is { } segment)
+            SkipPast(segment);
+    }
+
+    /// <summary>Jumps to the end of <paramref name="segment"/>; credits that run to the end finish the video.</summary>
+    private void SkipPast(SkipSegment segment)
+    {
+        var target = Math.Min(segment.End, _durationSeconds);
+        HideSkipSegmentButton();
+        _positionSeconds = target;
+        TryMpv(mpv => mpv.Seek(target));
+        UpdateTimes();
+    }
+
+    // ---------- Skip silence ----------
+
+    /// <summary>Turns skip silence on or off for this player (and remembers it).</summary>
+    private void SetSkipSilence(bool on)
+    {
+        _isSkipSilenceOn = on;
+        SkipSilenceToggle.IsOn = on;
+        if (!on)
+            EndSilenceHurry();
+        TryMpv(mpv => mpv.SetSilenceDetection(on));
+    }
+
+    private void SkipSilenceToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (SkipSilenceToggle.IsOn == _isSkipSilenceOn)
+            return;
+        PlayerSettings.SkipSilence = SkipSilenceToggle.IsOn;
+        SetSkipSilence(SkipSilenceToggle.IsOn);
+    }
+
+    /// <summary>
+    /// mpv's silence detector reports where the last silence started and ended (both keys stay once
+    /// seen, so the newer one tells whether it's quiet now). Quiet parts are played at
+    /// <see cref="SilenceSpeed"/>. The end is reported early, as audio is decoded ahead of what's
+    /// heard, so the hurry carries on until playback reaches the reported end.
+    /// </summary>
+    private void OnSilenceReport(string report)
+    {
+        if (!_isSkipSilenceOn || string.IsNullOrWhiteSpace(report))
+            return;
+
+        double? start = null, end = null;
+        try
+        {
+            using var json = System.Text.Json.JsonDocument.Parse(report);
+            start = ReadSeconds(json.RootElement, "lavfi.silence_start");
+            end = ReadSeconds(json.RootElement, "lavfi.silence_end");
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return;
+        }
+
+        var isQuiet = start is not null && (end is null || start > end);
+        if (isQuiet && !_isHurryingSilence)
+        {
+            if (_isPaused || !_isFileLoaded)
+                return;
+            _isHurryingSilence = true;
+            _silenceEndsAt = -1;
+            TryMpv(mpv => mpv.SetSpeed(SilenceSpeed));
+            UpdateSpeedLabel(SilenceSpeed);
+        }
+        else if (!isQuiet && _isHurryingSilence)
+        {
+            // A little before the sound returns, so the first word isn't rushed. An end far from
+            // here (odd timestamps) isn't trusted; normal speed comes back straight away instead.
+            var resumeAt = (end ?? 0) - 0.25;
+            if (resumeAt > _positionSeconds && resumeAt - _positionSeconds < 10)
+                _silenceEndsAt = resumeAt;
+            else
+                EndSilenceHurry();
+        }
+
+        static double? ReadSeconds(System.Text.Json.JsonElement root, string key)
+            => root.TryGetProperty(key, out var value)
+               && double.TryParse(value.GetString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var seconds)
+                ? seconds
+                : null;
+    }
+
+    private void EndSilenceHurry()
+    {
+        if (!_isHurryingSilence)
+            return;
+        _isHurryingSilence = false;
+        _silenceEndsAt = -1;
+        var speed = _normalSpeed;
+        TryMpv(mpv => mpv.SetSpeed(speed));
+        UpdateSpeedLabel(speed);
     }
 
     /// <summary>The chapter playing at <paramref name="seconds"/>, or null when the file has none.</summary>
@@ -1873,6 +2109,9 @@ public sealed partial class PlayerView : UserControl
                 break;
             case VirtualKey.X:
                 AdjustSubtitleDelay(0.1);
+                break;
+            case VirtualKey.S when _offeredSkip is { } segment:
+                SkipPast(segment);
                 break;
             default:
                 return false;

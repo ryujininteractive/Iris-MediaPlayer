@@ -265,6 +265,51 @@ public sealed class JellyfinClient
             return ReadItem(json.RootElement) ?? throw new JellyfinException("The server sent an empty answer for this title.");
     }
 
+    /// <summary>
+    /// Intros, recaps, credits and previews the server has marked for an item (Jellyfin 10.10's media
+    /// segments, filled by plugins such as Intro Skipper). Empty on older servers or when none are marked.
+    /// </summary>
+    public async Task<IReadOnlyList<Models.SkipSegment>> GetSkipSegmentsAsync(string itemId, CancellationToken cancel = default)
+    {
+        JsonDocument json;
+        try
+        {
+            json = await SendAsync(HttpMethod.Get, $"/MediaSegments/{itemId}", null, cancel, "load skip segments");
+        }
+        catch (JellyfinException)
+        {
+            return [];
+        }
+
+        using (json)
+        {
+            if (!json.RootElement.TryGetProperty("Items", out var items) || items.ValueKind != JsonValueKind.Array)
+                return [];
+
+            var segments = new List<Models.SkipSegment>();
+            foreach (var element in items.EnumerateArray())
+            {
+                Models.SkipKind? kind = element.TryGetProperty("Type", out var type) ? type.GetString() switch
+                {
+                    "Intro" => Models.SkipKind.Intro,
+                    "Recap" => Models.SkipKind.Recap,
+                    "Outro" => Models.SkipKind.Credits,
+                    "Preview" => Models.SkipKind.Preview,
+                    _ => null
+                } : null;
+                if (kind is null
+                    || !element.TryGetProperty("StartTicks", out var start) || !start.TryGetInt64(out var startTicks)
+                    || !element.TryGetProperty("EndTicks", out var end) || !end.TryGetInt64(out var endTicks))
+                    continue;
+
+                var segment = new Models.SkipSegment(kind.Value, startTicks / 10_000_000d, endTicks / 10_000_000d);
+                if (segment.IsUsable)
+                    segments.Add(segment);
+            }
+            return segments;
+        }
+    }
+
     public async Task<IReadOnlyList<JellyfinItem>> GetSeasonsAsync(string seriesId, CancellationToken cancel = default)
     {
         using var json = await SendAsync(HttpMethod.Get, $"/Shows/{seriesId}/Seasons?userId={RequireUser()}" + ListFields, null, cancel,

@@ -11,7 +11,6 @@ using System.Linq;
 using System.Numerics;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
-using Windows.Storage.Pickers;
 
 namespace Iris_MediaPlayer;
 
@@ -268,27 +267,37 @@ public sealed partial class MainWindow : Window
 
     private async void PickAndAddFolder()
     {
-        var picker = new FolderPicker { SuggestedStartLocation = PickerLocationId.VideosLibrary };
-        picker.FileTypeFilter.Add("*");
-        InitializePicker(picker);
-
-        var folder = await picker.PickSingleFolderAsync();
+        string? folder;
+        try
+        {
+            folder = FileDialogs.PickFolder(WinRT.Interop.WindowNative.GetWindowHandle(this));
+        }
+        catch (System.Runtime.InteropServices.COMException)
+        {
+            await ShowPickerFailedAsync("folder");
+            return;
+        }
         if (folder is not null)
-            await _store.AddFolderAsync(folder.Path);
+            await _store.AddFolderAsync(folder);
     }
 
     private async void PickAndPlayVideo()
     {
-        var picker = new FileOpenPicker { SuggestedStartLocation = PickerLocationId.VideosLibrary };
-        foreach (var extension in MediaLibraryService.SupportedVideoExtensions)
-            picker.FileTypeFilter.Add(extension);
-        InitializePicker(picker);
-
-        var file = await picker.PickSingleFileAsync();
-        if (file is null)
+        string? path;
+        try
+        {
+            path = FileDialogs.PickFile(WinRT.Interop.WindowNative.GetWindowHandle(this), "Videos",
+                MediaLibraryService.SupportedVideoExtensions);
+        }
+        catch (System.Runtime.InteropServices.COMException)
+        {
+            await ShowPickerFailedAsync("video");
+            return;
+        }
+        if (path is null)
             return;
 
-        var media = _store.OpenFile(file.Path);
+        var media = _store.OpenFile(path);
         if (media is null)
         {
             PlayerPage.ShowStatusMessage("Iris couldn’t access that video file.");
@@ -298,10 +307,28 @@ public sealed partial class MainWindow : Window
         StartPlayback(new PlayRequest(media));
     }
 
-    private void InitializePicker(object picker)
+    /// <summary>The Open dialog failing is rare; explains it instead of crashing.</summary>
+    private async System.Threading.Tasks.Task ShowPickerFailedAsync(string what)
     {
-        var windowHandle = WinRT.Interop.WindowNative.GetWindowHandle(this);
-        WinRT.Interop.InitializeWithWindow.Initialize(picker, windowHandle);
+        if (Content?.XamlRoot is not { } root)
+            return;
+        var dialog = new ContentDialog
+        {
+            XamlRoot = root,
+            Title = $"Couldn’t open that {what}",
+            Content = what == "video"
+                ? "Windows couldn’t open the file chooser. Try again, or drag the video onto Iris."
+                : "Windows couldn’t open the folder chooser. Try again.",
+            CloseButtonText = "OK"
+        };
+        try
+        {
+            await dialog.ShowAsync();
+        }
+        catch (System.Runtime.InteropServices.COMException)
+        {
+            // Another dialog is already open.
+        }
     }
 
     private void App_DragEnter(object sender, DragEventArgs e) => ShowDropTarget(e);

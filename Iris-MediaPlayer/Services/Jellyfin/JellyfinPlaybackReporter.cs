@@ -32,6 +32,8 @@ public sealed class JellyfinPlaybackReporter(JellyfinClient client, string itemI
 
     public void ReportStopped(double positionSeconds) => Send("/Sessions/Playing/Stopped", positionSeconds, isPaused: false);
 
+    public Task<System.Collections.Generic.IReadOnlyList<SkipSegment>> GetSkipSegmentsAsync() => client.GetSkipSegmentsAsync(itemId);
+
     private void Send(string path, double positionSeconds, bool isPaused)
     {
         var body = BuildBody(positionSeconds, isPaused);
