@@ -91,6 +91,11 @@ public sealed partial class SettingsView : UserControl
         BeginSection("Playback");
         AddRow("Autoplay next video", "Start the next video in the folder when one ends.",
             Toggle(PlayerSettings.AutoplayNext, on => PlayerSettings.AutoplayNext = on));
+        AddRow("Seek bar preview", "Show a picture of the moment when you hover the seek bar.",
+            Toggle(PlayerSettings.SeekPreview, on => PlayerSettings.SeekPreview = on));
+        AddRow("Seek bar preview size", "How big the picture is.",
+            Choice([("Small", 192), ("Medium", 288), ("Large", 384)], PlayerSettings.SeekPreviewWidth,
+                value => PlayerSettings.SeekPreviewWidth = value));
         AddRow("Autoplay countdown", "Seconds before the next video starts.",
             Choice([("3 seconds", 3), ("5 seconds", 5), ("10 seconds", 10)], PlayerSettings.AutoplayCountdownSeconds,
                 value => PlayerSettings.AutoplayCountdownSeconds = value));

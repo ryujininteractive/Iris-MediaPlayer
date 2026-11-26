@@ -30,6 +30,20 @@ internal static class PlayerSettings
 
     // ---------- Playback ----------
 
+    /// <summary>Show a picture of the moment when hovering the seek bar.</summary>
+    public static bool SeekPreview
+    {
+        get => AppStorage.GetBool("PlayerSeekPreview") ?? true;
+        set => AppStorage.SetBool("PlayerSeekPreview", value);
+    }
+
+    /// <summary>Width of the seek bar picture on screen, in pixels.</summary>
+    public static int SeekPreviewWidth
+    {
+        get => Math.Clamp((int)(AppStorage.GetDouble("PlayerSeekPreviewWidth") ?? 288), 160, 480);
+        set => AppStorage.SetDouble("PlayerSeekPreviewWidth", Math.Clamp(value, 160, 480));
+    }
+
     public static int AutoplayCountdownSeconds
     {
         get => Math.Clamp((int)(AppStorage.GetDouble("PlayerAutoplayCountdown") ?? 5), 1, 30);

@@ -235,6 +235,11 @@
                             <Border x:Name="SeekPreviewBadge" Canvas.Top="-38" Visibility="Collapsed" Padding="8,4"
                                     CornerRadius="6" Background="#BF000000">
                                 <StackPanel Spacing="1">
+                                    <!-- Picture of the hovered moment, filled in by SeekPreviewer -->
+                                    <Border x:Name="SeekPreviewFrame" Width="288" CornerRadius="4" Margin="-4,0,-4,4"
+                                            Background="#14FFFFFF" Visibility="Collapsed">
+                                        <Image x:Name="SeekPreviewImage" Stretch="Uniform" />
+                                    </Border>
                                     <TextBlock x:Name="SeekPreviewChapter" FontSize="12" Foreground="{StaticResource IrisTextMutedBrush}"
                                                HorizontalAlignment="Center" MaxWidth="240" TextTrimming="CharacterEllipsis"
                                                Visibility="Collapsed" />

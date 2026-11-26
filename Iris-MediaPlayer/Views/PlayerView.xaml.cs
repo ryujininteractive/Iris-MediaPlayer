@@ -61,6 +61,11 @@ public sealed partial class PlayerView : UserControl
     private MpvPlayback? _mpv;
     private IntPtr _boundSwapChain;
 
+    // Seek bar preview: started on the first hover of each video
+    private SeekPreviewer? _seekPreviewer;
+    private double _seekPreviewX;
+    private int _seekPreviewWidth;
+
     // Queue and current file
     private IReadOnlyList<MediaItem> _queue = [];
     private int _queueIndex;
@@ -212,6 +217,7 @@ public sealed partial class PlayerView : UserControl
     {
         SaveProgress();
         StopRemote();
+        StopSeekPreview();
         HideEndPanel();
         HideResumeBanner();
         SetSheetOpen(false);
@@ -294,6 +300,7 @@ public sealed partial class PlayerView : UserControl
     {
         SaveProgress();
         StopRemote();
+        StopSeekPreview();
         foreach (var timer in new[] { _controlsHideTimer, _singleTapTimer, _resumeBannerTimer, _osdTimer, _autoplayTimer, _posterTimer })
             timer.Stop();
         SetCursorHidden(false);
@@ -315,6 +322,7 @@ public sealed partial class PlayerView : UserControl
     {
         SaveProgress();
         StopRemote();
+        StopSeekPreview();
         HideEndPanel();
         HideResumeBanner();
 
@@ -1065,10 +1073,88 @@ public sealed partial class PlayerView : UserControl
         SeekPreviewChapter.Text = chapter?.DisplayName ?? string.Empty;
         SeekPreviewChapter.Visibility = chapter is null ? Visibility.Collapsed : Visibility.Visible;
         SeekPreviewBadge.Visibility = Visibility.Visible;
+        _seekPreviewX = x;
+        PlaceSeekPreview();
+        RequestSeekPreviewFrame(time);
+    }
+
+    /// <summary>Puts the badge above the pointer, kept inside the seek bar's ends.</summary>
+    private void PlaceSeekPreview()
+    {
+        var width = SeekTrack.ActualWidth;
         SeekPreviewBadge.UpdateLayout();
         Canvas.SetTop(SeekPreviewBadge, -SeekPreviewBadge.ActualHeight - 12);
         var badgeWidth = SeekPreviewBadge.ActualWidth > 0 ? SeekPreviewBadge.ActualWidth : 52;
-        Canvas.SetLeft(SeekPreviewBadge, Math.Clamp(x - badgeWidth / 2, 0, Math.Max(0, width - badgeWidth)));
+        Canvas.SetLeft(SeekPreviewBadge, Math.Clamp(_seekPreviewX - badgeWidth / 2, 0, Math.Max(0, width - badgeWidth)));
+    }
+
+    private void RequestSeekPreviewFrame(double seconds)
+    {
+        if (!PlayerSettings.SeekPreview || _currentMedia is null || _durationSeconds <= 0)
+        {
+            if (_seekPreviewer is not null)
+                StopSeekPreview();
+            return;
+        }
+
+        // A size changed in Settings mid-video starts a fresh previewer with sharper or smaller pictures.
+        var width = PlayerSettings.SeekPreviewWidth;
+        if (_seekPreviewer is not null && width != _seekPreviewWidth)
+            StopSeekPreview();
+
+        if (_seekPreviewer is null)
+        {
+            _seekPreviewWidth = width;
+            SeekPreviewFrame.Width = width;
+            // Pictures are made 1.5× the on-screen size so they stay sharp on high-DPI screens.
+            SeekPreviewer? previewer = null;
+            previewer = new SeekPreviewer(_currentMedia.StreamUrl ?? _currentMedia.FilePath, _durationSeconds, width * 3 / 2,
+                (_, jpeg) => DispatcherQueue.TryEnqueue(() => ShowSeekPreviewFrame(previewer!, jpeg)));
+            _seekPreviewer = previewer;
+        }
+        _seekPreviewer.Request(seconds);
+    }
+
+    private async void ShowSeekPreviewFrame(SeekPreviewer from, byte[] jpeg)
+    {
+        // Ignore pictures from a previous video, or arriving after the pointer left the bar.
+        if (from != _seekPreviewer || SeekPreviewBadge.Visibility != Visibility.Visible)
+            return;
+
+        try
+        {
+            using var stream = new Windows.Storage.Streams.InMemoryRandomAccessStream();
+            using (var writer = new Windows.Storage.Streams.DataWriter(stream.GetOutputStreamAt(0)))
+            {
+                writer.WriteBytes(jpeg);
+                await writer.StoreAsync();
+                await writer.FlushAsync();
+                writer.DetachStream();
+            }
+            var bitmap = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage();
+            await bitmap.SetSourceAsync(stream);
+            if (from != _seekPreviewer)
+                return;
+
+            SeekPreviewImage.Source = bitmap;
+            if (SeekPreviewFrame.Visibility != Visibility.Visible)
+            {
+                SeekPreviewFrame.Visibility = Visibility.Visible;
+                PlaceSeekPreview();
+            }
+        }
+        catch (Exception)
+        {
+            // A broken picture just means no preview this time.
+        }
+    }
+
+    private void StopSeekPreview()
+    {
+        _seekPreviewer?.Dispose();
+        _seekPreviewer = null;
+        SeekPreviewImage.Source = null;
+        SeekPreviewFrame.Visibility = Visibility.Collapsed;
     }
 
     private void SeekBackward_Click(object sender, RoutedEventArgs e) => SeekBy(-PlayerSettings.LargeSkipSeconds);
