@@ -2,7 +2,8 @@ using System.Linq;
 
 namespace Iris_MediaPlayer.Services;
 
-internal sealed record MpvTrack(long Id, string Type, string? Title, string? Language, bool IsSelected)
+/// <param name="ExternalFile">For a track loaded from its own file (an added subtitle): that file's path.</param>
+internal sealed record MpvTrack(long Id, string Type, string? Title, string? Language, bool IsSelected, string? ExternalFile = null)
 {
     public string DisplayName
     {

@@ -261,6 +261,7 @@ public sealed partial class PlayerView : UserControl
         {
             _mpv.AddSubtitle(filePath);
             RefreshTrackOptions();
+            SaveSubtitleChoice();
             UpdateSubtitlePosition();
             ShowOsd($"Subtitles: {Path.GetFileName(filePath)}");
         }
@@ -1464,13 +1465,55 @@ public sealed partial class PlayerView : UserControl
 
     // ---------- Tracks ----------
 
-    /// <summary>The audio and subtitle tracks picked before playing (Jellyfin details page).</summary>
+    /// <summary>
+    /// The audio and subtitle tracks to start with: the ones picked before playing (Jellyfin details
+    /// page), otherwise the ones chosen the last time this video played.
+    /// </summary>
     private void ApplyStartTracks()
     {
-        if (_currentMedia?.StartAudioTrack is { } audio)
-            TryMpv(mpv => mpv.SetAudioTrack(audio));
-        if (_currentMedia?.StartSubtitleTrack is { } subtitle)
-            TryMpv(mpv => mpv.SetSubtitleTrack(subtitle));
+        if (_currentMedia is not { } media || _mpv is null)
+            return;
+
+        var saved = TrackChoiceStore.Get(media.FilePath);
+        var audio = media.StartAudioTrack ?? saved?.Audio;
+        if (audio is { } audioId && (audioId < 0 || _mpv.GetTracks("audio").Any(track => track.Id == audioId)))
+            TryMpv(mpv => mpv.SetAudioTrack(audioId));
+
+        if (media.StartSubtitleTrack is { } startSubtitle)
+        {
+            TryMpv(mpv => mpv.SetSubtitleTrack(startSubtitle));
+            return;
+        }
+        if (saved?.Subtitle is not { } subtitleId)
+            return;
+
+        if (subtitleId < 0)
+        {
+            TryMpv(mpv => mpv.SetSubtitleTrack(-1));
+            return;
+        }
+        if (saved.SubtitleFile is { } file)
+        {
+            // An added subtitle file: pick it if mpv already loaded it next to the video, otherwise add it again.
+            var loaded = _mpv.GetTracks("sub").FirstOrDefault(track =>
+                string.Equals(track.ExternalFile, file, StringComparison.OrdinalIgnoreCase));
+            if (loaded is not null)
+                TryMpv(mpv => mpv.SetSubtitleTrack(loaded.Id));
+            else if (File.Exists(file))
+                TryMpv(mpv => mpv.AddSubtitle(file));
+            return;
+        }
+        if (_mpv.GetTracks("sub").Any(track => track.Id == subtitleId && track.ExternalFile is null))
+            TryMpv(mpv => mpv.SetSubtitleTrack(subtitleId));
+    }
+
+    /// <summary>Remembers the subtitle now showing (or none) for this video.</summary>
+    private void SaveSubtitleChoice()
+    {
+        if (_currentMedia is not { } media)
+            return;
+        var file = _subtitleTracks.FirstOrDefault(track => track.Id == _selectedSubtitleId)?.ExternalFile;
+        TrackChoiceStore.SetSubtitle(media.FilePath, _selectedSubtitleId, file);
     }
 
     private void RefreshTrackOptions()
@@ -1573,6 +1616,7 @@ public sealed partial class PlayerView : UserControl
         _selectedSubtitleId = trackId;
         if (trackId >= 0)
             _lastSubtitleId = trackId;
+        SaveSubtitleChoice();
         BuildTrackRows();
         // Text and picture subtitles are positioned differently.
         UpdateSubtitlePosition();
@@ -1582,6 +1626,8 @@ public sealed partial class PlayerView : UserControl
     {
         TryMpv(mpv => mpv.SetAudioTrack(trackId));
         _selectedAudioId = trackId;
+        if (_currentMedia is { } media)
+            TrackChoiceStore.SetAudio(media.FilePath, trackId);
         BuildTrackRows();
     }
 

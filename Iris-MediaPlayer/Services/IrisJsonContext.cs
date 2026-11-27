@@ -14,6 +14,7 @@ namespace Iris_MediaPlayer.Services;
 [JsonSerializable(typeof(List<MediaCollection>))]
 [JsonSerializable(typeof(Dictionary<string, PlaybackProgressEntry>))]
 [JsonSerializable(typeof(Dictionary<string, string>))]
+[JsonSerializable(typeof(Dictionary<string, TrackChoice>))]
 internal sealed partial class IrisJsonContext : JsonSerializerContext
 {
 }

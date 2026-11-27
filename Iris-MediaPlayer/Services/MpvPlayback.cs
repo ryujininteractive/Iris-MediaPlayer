@@ -422,7 +422,7 @@ internal sealed class MpvPlayback : IDisposable
                 var selected = MpvNative.mpv_get_property_flag(_handle, prefix + "selected", FlagFormat, out var flag) >= 0
                                && flag != 0;
                 tracks.Add(new MpvTrack(id, type, GetStringProperty(prefix + "title"),
-                    GetStringProperty(prefix + "lang"), selected));
+                    GetStringProperty(prefix + "lang"), selected, GetStringProperty(prefix + "external-filename")));
             }
             return tracks;
         }
