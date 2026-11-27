@@ -49,7 +49,7 @@
                     </StackPanel>
                 </Button>
 
-                <Border Grid.Column="1" CornerRadius="23" Padding="0" Background="#B3111216">
+                <Border Grid.Column="1" CornerRadius="23" Padding="0" Background="{StaticResource IrisPillBrush}">
                     <controls:Segmented x:Name="Tabs" IsPill="True" SegmentWidth="112" SegmentHeight="34"
                                         SelectionChanged="Tabs_SelectionChanged" AutomationProperties.Name="Jellyfin sections" />
                 </Border>

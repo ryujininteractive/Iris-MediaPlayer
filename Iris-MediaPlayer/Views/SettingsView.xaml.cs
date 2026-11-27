@@ -67,6 +67,10 @@ public sealed partial class SettingsView : UserControl
             return;
         _isBuilt = true;
 
+        BeginSection("Appearance");
+        AddRow("Theme", "Changes straight away.", null);
+        _currentGroup!.Children.Add(ThemePicker());
+
         BeginSection("Library");
         AddFolderRow();
         AddRow("Rescan now", "Look through your folders again for new, moved or removed videos.", RescanControl());
@@ -479,6 +483,77 @@ public sealed partial class SettingsView : UserControl
             row.Children.Add(element);
         }
         _currentGroup!.Children.Add(row);
+    }
+
+    /// <summary>A card per theme, each painted in its own colours; the chosen one has an accent ring.</summary>
+    private UIElement ThemePicker()
+    {
+        var grid = new Grid { ColumnSpacing = 12, Padding = new Thickness(20, 0, 20, 14) };
+        var cards = new List<(Button Button, IrisTheme Theme)>();
+
+        void ShowSelection()
+        {
+            foreach (var (button, theme) in cards)
+            {
+                var isCurrent = theme == Themes.Current;
+                button.BorderBrush = isCurrent
+                    ? (Brush)Application.Current.Resources["IrisAccentBrush"]
+                    : (Brush)Application.Current.Resources["IrisStrokeBrush"];
+                button.BorderThickness = new Thickness(isCurrent ? 2 : 1);
+            }
+        }
+
+        foreach (var theme in Themes.All)
+        {
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            // A tiny Iris window: the background, a card with a title line and an accent button.
+            var preview = new Grid
+            {
+                Height = 78,
+                CornerRadius = new CornerRadius(10),
+                Background = new SolidColorBrush(theme.Background),
+                Padding = new Thickness(10)
+            };
+            var card = new StackPanel
+            {
+                Spacing = 6,
+                Padding = new Thickness(10),
+                CornerRadius = new CornerRadius(8),
+                Background = new SolidColorBrush(theme.Surface)
+            };
+            card.Children.Add(new Border { Height = 6, Width = 56, CornerRadius = new CornerRadius(3), HorizontalAlignment = HorizontalAlignment.Left, Background = new SolidColorBrush(theme.Text) });
+            card.Children.Add(new Border { Height = 5, Width = 38, CornerRadius = new CornerRadius(3), HorizontalAlignment = HorizontalAlignment.Left, Background = new SolidColorBrush(theme.TextTertiary) });
+            card.Children.Add(new Border { Height = 12, Width = 34, CornerRadius = new CornerRadius(6), HorizontalAlignment = HorizontalAlignment.Left, Background = new SolidColorBrush(theme.Accent) });
+            preview.Children.Add(card);
+
+            var content = new StackPanel { Spacing = 8 };
+            content.Children.Add(preview);
+            content.Children.Add(new TextBlock { Text = theme.Name, FontSize = 13, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, Margin = new Thickness(2, 0, 0, 0) });
+
+            var button = new Button
+            {
+                Content = content,
+                Padding = new Thickness(6, 6, 6, 8),
+                CornerRadius = new CornerRadius(14),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                HorizontalContentAlignment = HorizontalAlignment.Stretch,
+                Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent)
+            };
+            ToolTipService.SetToolTip(button, theme.Description);
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(button, $"{theme.Name} theme");
+            button.Click += (_, _) =>
+            {
+                Themes.Apply(theme);
+                ShowSelection();
+            };
+            Grid.SetColumn(button, grid.ColumnDefinitions.Count - 1);
+            grid.Children.Add(button);
+            cards.Add((button, theme));
+        }
+
+        ShowSelection();
+        return grid;
     }
 
     private static UIElement Padded(UIElement child)

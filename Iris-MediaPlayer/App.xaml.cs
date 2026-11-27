@@ -26,6 +26,8 @@ public partial class App : Application
     {
         // First run after moving from the MSIX build: bring the old library data across.
         AppStorage.MigrateFromMsix();
+        // Before any window: pages are built with the chosen theme's colours from the start.
+        Themes.ApplySaved();
 
         var files = GetFilesToOpen();
         _window = files.Count > 0 ? new PlayerWindow(files) : new MainWindow();

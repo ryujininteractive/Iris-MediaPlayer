@@ -239,7 +239,7 @@
                         <Canvas x:Name="ChapterMarks" IsHitTestVisible="False" />
                         <Canvas IsHitTestVisible="False">
                             <Grid x:Name="SeekKnob" Width="22" Height="22" Canvas.Top="-2">
-                                <Ellipse Fill="#598B93FF" />
+                                <Ellipse Fill="{StaticResource IrisAccentHoverStrokeBrush}" />
                                 <Ellipse Width="14" Height="14" Fill="White" />
                             </Grid>
                             <Border x:Name="SeekPreviewBadge" Canvas.Top="-38" Visibility="Collapsed" Padding="8,4"

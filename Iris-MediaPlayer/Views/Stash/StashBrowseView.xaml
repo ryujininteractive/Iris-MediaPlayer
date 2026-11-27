@@ -45,9 +45,9 @@
                 <TextBox x:Name="SearchBox" Style="{StaticResource IrisFilterTextBoxStyle}" TextChanged="SearchBox_TextChanged"
                          IsSpellCheckEnabled="False" AutomationProperties.Name="Search">
                     <TextBox.Resources>
-                        <SolidColorBrush x:Key="TextControlBackground" Color="#FF141519" />
-                        <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#FF17181D" />
-                        <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#FF17181D" />
+                        <StaticResource x:Key="TextControlBackground" ResourceKey="IrisFieldBrush" />
+                        <StaticResource x:Key="TextControlBackgroundPointerOver" ResourceKey="IrisRaisedBrush" />
+                        <StaticResource x:Key="TextControlBackgroundFocused" ResourceKey="IrisRaisedBrush" />
                         <SolidColorBrush x:Key="TextControlBorderBrush" Color="#12FFFFFF" />
                     </TextBox.Resources>
                 </TextBox>

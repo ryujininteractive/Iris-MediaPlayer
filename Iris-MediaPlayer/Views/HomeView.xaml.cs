@@ -41,6 +41,7 @@ public sealed partial class HomeView : UserControl
     public HomeView()
     {
         InitializeComponent();
+        Services.Themes.TrackFades(this);
         _heroTimer = DispatcherQueue.GetForCurrentThread()!.CreateTimer();
         _heroTimer.Interval = HeroInterval;
         _heroTimer.Tick += (_, _) => ShowFeatured((_featuredIndex + 1) % Math.Max(1, _featured.Count), animate: true);

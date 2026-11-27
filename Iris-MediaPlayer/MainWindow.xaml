@@ -118,15 +118,15 @@
                                         LostFocus="SearchBox_LostFocus"
                                         AutomationProperties.Name="Search">
                             <AutoSuggestBox.Resources>
-                                <SolidColorBrush x:Key="TextControlBackground" Color="#8C17181D" />
-                                <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#B317181D" />
-                                <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#E617181D" />
+                                <StaticResource x:Key="TextControlBackground" ResourceKey="IrisSearchRestBrush" />
+                                <StaticResource x:Key="TextControlBackgroundPointerOver" ResourceKey="IrisSearchHoverBrush" />
+                                <StaticResource x:Key="TextControlBackgroundFocused" ResourceKey="IrisSearchFocusBrush" />
                                 <SolidColorBrush x:Key="TextControlBorderBrush" Color="#14FFFFFF" />
                                 <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="#24FFFFFF" />
-                                <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="#998B93FF" />
-                                <SolidColorBrush x:Key="TextControlPlaceholderForeground" Color="#FF8A8A93" />
-                                <SolidColorBrush x:Key="TextControlPlaceholderForegroundPointerOver" Color="#FF8A8A93" />
-                                <SolidColorBrush x:Key="TextControlPlaceholderForegroundFocused" Color="#FF8A8A93" />
+                                <StaticResource x:Key="TextControlBorderBrushFocused" ResourceKey="IrisAccentFocusStrokeBrush" />
+                                <StaticResource x:Key="TextControlPlaceholderForeground" ResourceKey="IrisTextTertiaryBrush" />
+                                <StaticResource x:Key="TextControlPlaceholderForegroundPointerOver" ResourceKey="IrisTextTertiaryBrush" />
+                                <StaticResource x:Key="TextControlPlaceholderForegroundFocused" ResourceKey="IrisTextTertiaryBrush" />
                                 <Thickness x:Key="TextControlBorderThemeThicknessFocused">1</Thickness>
                             </AutoSuggestBox.Resources>
                             <AutoSuggestBox.TextBoxStyle>
@@ -197,7 +197,7 @@
 
                 <Border x:Name="DropOverlay" Visibility="Collapsed" Margin="24" CornerRadius="22"
                         BorderBrush="{StaticResource IrisAccentStrokeBrush}" BorderThickness="2"
-                        Background="#E6111216" IsHitTestVisible="False">
+                        Background="{StaticResource IrisToastBrush}" IsHitTestVisible="False">
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
                         <Border Width="72" Height="72" CornerRadius="36" HorizontalAlignment="Center"
                                 Background="{StaticResource IrisAccentSoftBrush}">

@@ -20,12 +20,13 @@ internal static class WindowChrome
         bar.PreferredHeightOption = TitleBarHeightOption.Tall;
         bar.ButtonBackgroundColor = Colors.Transparent;
         bar.ButtonInactiveBackgroundColor = Colors.Transparent;
-        bar.ButtonForegroundColor = Color.FromArgb(0xFF, 0xA1, 0xA1, 0xAA);
-        bar.ButtonInactiveForegroundColor = Color.FromArgb(0xFF, 0x5A, 0x5A, 0x62);
         bar.ButtonHoverBackgroundColor = Color.FromArgb(0x12, 0xFF, 0xFF, 0xFF);
-        bar.ButtonHoverForegroundColor = Color.FromArgb(0xFF, 0xF4, 0xF4, 0xF6);
         bar.ButtonPressedBackgroundColor = Color.FromArgb(0x0A, 0xFF, 0xFF, 0xFF);
-        bar.ButtonPressedForegroundColor = Color.FromArgb(0xFF, 0xF4, 0xF4, 0xF6);
+        // The glyph colours follow the theme's text colours, now and after a theme change.
+        Themes.ApplyCaptionColors(window);
+        void Recolor() => Themes.ApplyCaptionColors(window);
+        Themes.Changed += Recolor;
+        window.Closed += (_, _) => Themes.Changed -= Recolor;
     }
 
     public static void SizeAndCenter(Window window, int width, int height)

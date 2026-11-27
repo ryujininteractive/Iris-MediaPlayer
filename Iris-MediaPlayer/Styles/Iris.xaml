@@ -2,6 +2,7 @@
 <!--
     Obsidian: the Iris design tokens and shared styles. Every page uses these so color, type,
     shape and motion stay consistent. Iris is dark-only (see RequestedTheme in App.xaml).
+    The colours below are Obsidian's; Services/Themes.cs swaps them for the chosen theme at runtime.
 
     Motion follows Fluent timing: 167 ms for small state changes, 250 ms for hover, 333 ms for
     selection and sheets. Templates here use XAML transitions; larger moves (hero, cards,
@@ -69,6 +70,13 @@
     <SolidColorBrush x:Key="IrisChapterGapBrush" Color="#B3000000" />
     <SolidColorBrush x:Key="IrisPlayerIconBrush" Color="#FFE4E4E9" />
     <SolidColorBrush x:Key="IrisCardHoverBrush" Color="#0BFFFFFF" />
+    <!-- Search and filter boxes, the glass pills over artwork and the drop overlay -->
+    <SolidColorBrush x:Key="IrisAccentFocusStrokeBrush" Color="#998B93FF" />
+    <SolidColorBrush x:Key="IrisSearchRestBrush" Color="#8C17181D" />
+    <SolidColorBrush x:Key="IrisSearchHoverBrush" Color="#B317181D" />
+    <SolidColorBrush x:Key="IrisSearchFocusBrush" Color="#E617181D" />
+    <SolidColorBrush x:Key="IrisPillBrush" Color="#B3111216" />
+    <SolidColorBrush x:Key="IrisToastBrush" Color="#E6111216" />
 
     <!-- Acrylic for floating chrome over video and artwork: search, player bars, sheets. -->
     <AcrylicBrush x:Key="IrisGlassBrush" TintColor="#FF121318" TintOpacity="0.62"
@@ -381,7 +389,7 @@
 
     <!-- Small glass pill over artwork: Back, the Jellyfin server chip. -->
     <Style x:Key="IrisGlassPillButtonStyle" TargetType="Button" BasedOn="{StaticResource IrisButtonBaseStyle}">
-        <Setter Property="Background" Value="#B3111216" />
+        <Setter Property="Background" Value="{StaticResource IrisPillBrush}" />
         <Setter Property="Height" Value="38" />
         <Setter Property="Padding" Value="12,0,16,0" />
         <Setter Property="CornerRadius" Value="19" />

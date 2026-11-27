@@ -37,6 +37,7 @@ public sealed partial class JellyfinDetailsView : UserControl
     public JellyfinDetailsView()
     {
         InitializeComponent();
+        Services.Themes.TrackFades(this);
     }
 
     /// <summary>Play something from this page; the queue is the season's episodes for shows.</summary>

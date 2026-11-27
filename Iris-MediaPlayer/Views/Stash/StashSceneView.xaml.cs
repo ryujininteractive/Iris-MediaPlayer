@@ -28,6 +28,7 @@ public sealed partial class StashSceneView : UserControl
     public StashSceneView()
     {
         InitializeComponent();
+        Services.Themes.TrackFades(this);
     }
 
     public event EventHandler<PlayRequest>? PlayRequested;
