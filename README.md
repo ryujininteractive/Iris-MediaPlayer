@@ -59,11 +59,15 @@ and asks you to restart (or just installs it the next time you open it).
 **Watching**
 - Plays almost any format smoothly, since [mpv](https://mpv.io) is doing the actual playback.
 - Remembers where you stopped, and moves on to the next video in the folder.
+- Hover the seek bar to see a little picture of that moment.
+- Skip intros, recaps and credits with one button (or automatically), and speed through the quiet bits.
 - Switch audio and subtitle tracks, load your own subtitle files, and fix subtitles that are out of sync.
+  It remembers what you picked for each video.
 - Jump between chapters if the movie has them.
 - Change speed, zoom (fit, fill or stretch), crop and aspect ratio.
 - Mini player that stays on top while you do other stuff.
 - Scroll over the video to change the volume.
+- Four themes to pick from: Obsidian, Golden Sheen, Mahogany and Silver Sheen.
 
 **Media servers**
 - Connect your **Jellyfin** server and browse it like a proper media center: films, shows,
@@ -90,6 +94,7 @@ and asks you to restart (or just installs it the next time you open it).
 | I | Mini player |
 | Page Up / Page Down | Previous / next chapter |
 | Shift+P / Shift+N | Previous / next video |
+| S | Skip the intro, recap or credits |
 | C | Change zoom |
 | Z / X | Subtitles earlier / later |
 | Esc | Go back |
@@ -101,15 +106,15 @@ and asks you to restart (or just installs it the next time you open it).
 - Your library, collections and resume points are saved in `%LocalAppData%\Iris`.
 - You can uninstall it from **Settings › Apps › Installed apps**. Your library stays, in case you
   come back.
+
 ## What's coming next
 
 In the order I'm planning to build them:
 
-1. **Seek bar preview:** a little picture of that moment when you hover the seek bar.
-2. **Skip intro and skip silence:** a button to jump past the intro, and an option to speed
-   through the quiet bits.
-3. **More themes:** more looks to choose from, beyond the current dark one.
-4. **Plex:** connect your Plex server, like Jellyfin and Stash.
+1. **Plex:** connect your Plex server, like Jellyfin and Stash.
+2. **Video colour:** adjust brightness, contrast, saturation, gamma and hue while you watch.
+3. **Audio equaliser:** a 10-band EQ with presets, plus volume levelling for films that are
+   quiet in the talking bits and loud in the action.
 
 It's still a work in progress, so things will keep changing as I go.
 
